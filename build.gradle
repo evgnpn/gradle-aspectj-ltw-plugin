@@ -1,0 +1,37 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'groovy'
+    id 'maven-publish'
+    id 'com.gradle.plugin-publish' version '0.12.0'
+}
+
+repositories {
+    jcenter()
+}
+
+def pluginVersion = "1.0"
+
+version = pluginVersion
+group = "ru.clevertec.gradle.plugin"
+
+gradlePlugin {
+    plugins {
+        aspectjltw {
+            id = 'ru.clevertec.plugin.aspectj.ltw'
+            implementationClass = 'ru.clevertec.plugin.aspectj.ltw.AspectJPlugin'
+        }
+    }
+}
+
+pluginBundle {
+    website = 'http://clevertec.ru'
+    vcsUrl = 'https://github.com/evgnpn/gradle-aspectj-ltw-plugin'
+    description = 'Plugin which adds support for Late Time Weaving to gradle project'
+    plugins {
+        aspectjltw {
+            displayName = 'Adds a runtime agent for AspectJ LTW'
+            tags = ['aspectj', 'ltw', 'aspectj-ltw', 'clevertec', 'plugin']
+            version = pluginVersion
+        }
+    }
+}
