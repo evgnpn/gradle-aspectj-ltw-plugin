@@ -32,44 +32,58 @@ class AspectJPlugin implements Plugin<Project> {
         project.dependencies.add(IMPLEMENTATION_CONFIGURATION,
                 project.dependencies.create("$ASPECTJ_RUNTIME_ARTIFACT:$ASPECTJ_VERSION"))
 
-        def aspectjTools = project.dependencies.create("$ASPECTJ_TOOLS_ARTIFACT:$ASPECTJ_VERSION")
-        project.dependencies.add(IMPLEMENTATION_CONFIGURATION, aspectjTools)
-        project.dependencies.add(ASPECTJ_COMPILER_CONFIGURATION, aspectjTools)
+        def aspectjToolsDependency = project.dependencies.create("$ASPECTJ_TOOLS_ARTIFACT:$ASPECTJ_VERSION")
+        project.dependencies.add(IMPLEMENTATION_CONFIGURATION, aspectjToolsDependency)
+        project.dependencies.add(ASPECTJ_COMPILER_CONFIGURATION, aspectjToolsDependency)
 
         def aspectjWeaverDependency = project.dependencies.create("$ASPECTJ_WEAVER_ARTIFACT:$ASPECTJ_VERSION")
         project.dependencies.add(IMPLEMENTATION_CONFIGURATION, aspectjWeaverDependency)
         project.dependencies.add(RUNTIME_AGENT_CONFIGURATION, aspectjWeaverDependency)
 
-        def aspectj = { sourceFileSet, destDir ->
+        project.compileJava { compileJava ->
+            compileJava.doLast { aspectj(project, extension) }
+        }
+    }
 
-            project.ant.taskdef(
-                    resource: "org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties",
-                    classpath: project.configurations.ajc.asPath
-            )
+    private static void aspectj(Project project, AspectJPluginExtension extension) {
 
-            // https://www.eclipse.org/aspectj/doc/next/devguide/antTasks-iajc.html
-            project.ant.iajc(
-                    maxmem: "1024m",
-                    fork: "true",
-                    Xlint: "ignore",
-                    classpath: sourceFileSet.runtimeClasspath.asPath,
-                    destDir: destDir,
-                    source: project.sourceCompatibility,
-                    target: project.targetCompatibility)
-                    {
-                        sourceroots { sourceFileSet.java.srcDirs.each { dir -> pathelement(path: dir) } }
+        project.ant.taskdef(
+                resource: "org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties",
+                classpath: project.configurations.ajc.asPath
+        )
+
+        project.ant.iajc(
+                maxmem: extension.maxmem,
+                fork: extension.fork.toString(),
+                Xlint: extension.xlint,
+                classpath: extension.classpath.asPath,
+                destDir: extension.destDir,
+                source: sourceCompatibility(project, extension),
+                target: targetCompatibility(project, extension),
+                sourceRootCopyFilter: extension.sourceRootCopyFilter)
+                {
+                    sourceroots {
+                        extension.sourceRoots.each { dir ->
+                            pathelement(path: dir)
+                        }
                     }
-        }
-
-        project.compileJava {
-            doLast {
-                aspectj(extension.sourceSetPart, extension.destinationDir)
-            }
-        }
+                }
     }
 
     private static Configuration findOrCreateConfiguration(Project project, String name) {
         def existsConfiguration = project.configurations.findByName(name)
         return existsConfiguration != null ? existsConfiguration : project.configurations.create(name)
+    }
+
+    private static String sourceCompatibility(Project project, AspectJPluginExtension extension) {
+        return extension.source == null || extension.source.isBlank()
+                ? project.sourceCompatibility
+                : extension.source
+    }
+
+    private static String targetCompatibility(Project project, AspectJPluginExtension extension) {
+        return extension.target == null || extension.target.isBlank()
+                ? project.targetCompatibility
+                : extension.target
     }
 }

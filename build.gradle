@@ -9,7 +9,7 @@ repositories {
     jcenter()
 }
 
-def pluginVersion = "1.0"
+def pluginVersion = "1.1"
 
 version = pluginVersion
 group = "ru.clevertec.gradle.plugin"
