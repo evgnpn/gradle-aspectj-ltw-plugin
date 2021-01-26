@@ -6,7 +6,7 @@ This plugin makes it easy to use AspectJ LTW in your project.
 ```groovy
 plugins {
     // ...
-    id 'ru.clevertec.plugin.aspectj.ltw' version '1.1'
+    id 'ru.clevertec.plugin.aspectj.ltw' version '1.1.1'
 }
 
 def aspectjSourceRoot = "src/aspects/java"

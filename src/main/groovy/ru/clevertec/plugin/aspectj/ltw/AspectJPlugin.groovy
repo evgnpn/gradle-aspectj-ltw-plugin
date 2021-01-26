@@ -2,15 +2,13 @@ package ru.clevertec.plugin.aspectj.ltw
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
 
 class AspectJPlugin implements Plugin<Project> {
 
     private final static String EXTENSION_NAME = "aspectjltw"
 
-    private final static String IMPLEMENTATION_CONFIGURATION = "implementation"
-    private final static String ASPECTJ_COMPILER_CONFIGURATION = "ajc"
-    private final static String RUNTIME_AGENT_CONFIGURATION = "runtimeAgent"
+    private final static String CONFIGURATION_ASPECTJ_COMPILER = "ajc"
+    private final static String CONFIGURATION_RUNTIME_AGENT = "runtimeAgent"
 
     private final static String ASPECTJ_RUNTIME_ARTIFACT = "org.aspectj:aspectjrt"
     private final static String ASPECTJ_TOOLS_ARTIFACT = "org.aspectj:aspectjtools"
@@ -25,24 +23,16 @@ class AspectJPlugin implements Plugin<Project> {
 
         project.repositories.add(project.repositories.mavenCentral())
 
-        project.configurations.add(findOrCreateConfiguration(project, IMPLEMENTATION_CONFIGURATION))
-        project.configurations.add(findOrCreateConfiguration(project, ASPECTJ_COMPILER_CONFIGURATION))
-        project.configurations.add(findOrCreateConfiguration(project, RUNTIME_AGENT_CONFIGURATION))
+        project.configurations.register(CONFIGURATION_ASPECTJ_COMPILER)
+        project.configurations.register(CONFIGURATION_RUNTIME_AGENT)
 
-        project.dependencies.add(IMPLEMENTATION_CONFIGURATION,
-                project.dependencies.create("$ASPECTJ_RUNTIME_ARTIFACT:$ASPECTJ_VERSION"))
+        project.dependencies.implementation("$ASPECTJ_RUNTIME_ARTIFACT:$ASPECTJ_VERSION")
+        project.dependencies.implementation("$ASPECTJ_TOOLS_ARTIFACT:$ASPECTJ_VERSION")
+        project.dependencies.implementation("$ASPECTJ_WEAVER_ARTIFACT:$ASPECTJ_VERSION")
+        project.dependencies.ajc("$ASPECTJ_TOOLS_ARTIFACT:$ASPECTJ_VERSION")
+        project.dependencies.runtimeAgent("$ASPECTJ_WEAVER_ARTIFACT:$ASPECTJ_VERSION")
 
-        def aspectjToolsDependency = project.dependencies.create("$ASPECTJ_TOOLS_ARTIFACT:$ASPECTJ_VERSION")
-        project.dependencies.add(IMPLEMENTATION_CONFIGURATION, aspectjToolsDependency)
-        project.dependencies.add(ASPECTJ_COMPILER_CONFIGURATION, aspectjToolsDependency)
-
-        def aspectjWeaverDependency = project.dependencies.create("$ASPECTJ_WEAVER_ARTIFACT:$ASPECTJ_VERSION")
-        project.dependencies.add(IMPLEMENTATION_CONFIGURATION, aspectjWeaverDependency)
-        project.dependencies.add(RUNTIME_AGENT_CONFIGURATION, aspectjWeaverDependency)
-
-        project.compileJava { compileJava ->
-            compileJava.doLast { aspectj(project, extension) }
-        }
+        project.compileJava { compileJava -> compileJava.doLast { aspectj(project, extension) } }
     }
 
     private static void aspectj(Project project, AspectJPluginExtension extension) {
@@ -68,11 +58,6 @@ class AspectJPlugin implements Plugin<Project> {
                         }
                     }
                 }
-    }
-
-    private static Configuration findOrCreateConfiguration(Project project, String name) {
-        def existsConfiguration = project.configurations.findByName(name)
-        return existsConfiguration != null ? existsConfiguration : project.configurations.create(name)
     }
 
     private static String sourceCompatibility(Project project, AspectJPluginExtension extension) {

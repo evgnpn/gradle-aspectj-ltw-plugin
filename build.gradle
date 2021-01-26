@@ -9,7 +9,11 @@ repositories {
     jcenter()
 }
 
-def pluginVersion = "1.1"
+dependencies {
+    implementation "org.codehaus.groovy:groovy-all:2.5.12"
+}
+
+def pluginVersion = "1.1.1"
 
 version = pluginVersion
 group = "ru.clevertec.gradle.plugin"
